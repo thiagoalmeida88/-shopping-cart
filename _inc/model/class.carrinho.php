@@ -24,6 +24,8 @@ class Carrinho
     public function setQuantidade($quantidade)
     {
         $this->quantidade = $quantidade;
+        return;
+
     }
 
     public function __construct(Conexao $conexao)
@@ -33,7 +35,7 @@ class Carrinho
 
     public function salvar()
     {
-        $sql = "
+            $sql = "
             INSERT INTO carrinhoproduto 
                 (
                 car_id,
@@ -46,26 +48,37 @@ class Carrinho
                 :produto,
                 :quantidade
                 )
-        ";
+            ";
 
-        $st = $this->conexao->prepare($sql);
-        $st->bindParam(':carrinho', $this->codigoCarrinho, PDO::PARAM_INT);
-        $st->bindParam(':produto', $this->getCodigoProduto(), PDO::PARAM_INT);
-        $st->bindParam(':quantidade', $this->getQuantidade(), PDO::PARAM_INT);
-        $st->execute();
+            $st = $this->conexao->prepare($sql);
+            $st->bindValue(':carrinho', $this->codigoCarrinho, PDO::PARAM_INT);
+            $st->bindValue(':produto', $this->getCodigoProduto(), PDO::PARAM_INT);
+            $st->bindValue(':quantidade', $this->getQuantidade(), PDO::PARAM_INT);
+            $st->execute();
     }
 
     public function excluir()
     {
-        $sql = "
+        $st = $this->conexao->prepare("
             DELETE FROM
                 carrinhoproduto 
             WHERE
-                prd_id = :produto
-        ";
+                prd_id = " . $this->getCodigoProduto() . "
+                AND car_id = 1
+        ");
+        $st->execute();
+    }
 
-        $st = $this->conexao->prepare($sql);
-        $st->bindParam(':produto', $this->getCodigoProduto(), PDO::PARAM_INT);
+    public function atualizar()
+    {
+        $st = $this->conexao->prepare("
+            UPDATE 
+                carrinhoproduto 
+                SET quantidade = " . $this->getQuantidade() . " 
+            WHERE 
+                prd_id = " . $this->getCodigoProduto() . " 
+                AND car_id = 1"
+        );
         $st->execute();
     }
 
@@ -82,8 +95,24 @@ class Carrinho
             FROM 
                 produto p
                 INNER JOIN carrinhoproduto cp ON cp.prd_id = p.prd_id
+                AND cp.car_id = 1  
             GROUP BY
                 p.prd_id
+            ";
+
+        return $this->conexao->select($sql);
+    }
+
+    public function qtdeProdutoCarrinho(){
+
+        $sql = "
+            SELECT                
+                quantidade 
+            FROM 
+                carrinhoproduto 
+            WHERE 
+                prd_id = " . $this->getCodigoProduto() . "
+                AND car_id = 1
             ";
 
         return $this->conexao->select($sql);

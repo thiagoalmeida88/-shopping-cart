@@ -4,28 +4,54 @@ require '../../io.php';
 
 $carrinho = new Carrinho($conexao);
 
-if ($_POST) {
-    try {
-        $conexao->begin();
+try {
+    $conexao->begin();
 
-        if ($_POST['id_popup'] != "") {
+    if ($_POST) {
+
+        if (isset($_POST['id_popup']) && is_numeric($_POST['id_popup'])) {
             $carrinho->setCodigoProduto($_POST['id_popup']);
+        }
+
+        if (isset($_POST['opcao']) == "adicionar") {
             $carrinho->setQuantidade($_POST['quantidade_popup']);
-            $carrinho->salvar();
+
+            $quantidadeProduto = $carrinho->qtdeProdutoCarrinho();
+
+            if(count($quantidadeProduto) > 0) {
+                $quantidade = $quantidadeProduto[0]['quantidade'] + $carrinho->getQuantidade();
+                $carrinho->setQuantidade($quantidade);
+                $carrinho->atualizar();
+            } else {
+                $carrinho->salvar();
+            }
         }
 
-        if ($_POST['excluir'] == "1") {
+        if (isset($_POST['excluir']) && $_POST['excluir'] == "1") {
             $carrinho->setCodigoProduto($_POST['id_excluir_popup']);
-            $carrinho->excluir();
+            $carrinho->setQuantidade($_POST['quantidade_excluir_popup']);
+
+            $quantidadeProduto = $carrinho->qtdeProdutoCarrinho();
+
+            if(count($quantidadeProduto) > 0) {
+                $qtdTotal = $quantidadeProduto[0]['quantidade'];
+            }
+
+            if ($qtdTotal == $carrinho->getQuantidade()) {
+                $carrinho->excluir();
+            } else {
+                $carrinho->atualizar();
+            }
         }
-
-        $conexao->commit();
-        echo "ok";
-
-    } catch (Exception $ex) {
-        $conexao->rollBack();
-        echo $ex->getMessage();
     }
+
+    echo "ok";
+    $conexao->commit();
+
+} catch (Exception $ex) {
+    $conexao->rollBack();
+    echo $ex->getMessage();
 }
+
 
 

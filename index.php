@@ -48,7 +48,7 @@ $lista = $produto->lista();
                                                 R$<?= number_format($row['preco'], 2, ',', '.') ?>
                                             </h4>
                                         </div>
-                                        <div class="panel-footer">
+                                        <div class="modal-footer">
                                             <input type="hidden" id="imagem<?= $i ?>" value="<?= $row['imagem'] ?>">
                                             <input type="hidden" id="id<?= $i ?>" value="<?= $row['prd_id'] ?>">
                                             <input type="hidden" id="nome<?= $i ?>" value="<?= $row['nome'] ?>">
@@ -81,35 +81,36 @@ $lista = $produto->lista();
                     </div>
                         <div class="modal-body">
                             <input type="hidden" name="id_popup" id="id_popup">
+                            <input type="hidden" name="opcao" id="opcao" value="adicionar">
                             <div class="panel-body">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <img alt="Imagem do produto" id="imagem_popup" width="150" height="150" src="img/produtos/<?= $row['imagem'] ?>" class="user-image img-responsive"/>
+                                        <img alt="Imagem do produto" id="imagem_popup" width="150" height="150" class="user-image img-responsive"/>
                                     </div>
                                 </div>
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <label>Produto:</label>
+                                        <label>Produto</label>
                                         <input type="text" id="nome_popup" class="form-control" disabled>
                                     </div>
                                 </div>
-                                <div class="col-sm-12">
+                                <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label>Quantidade:</label>
-                                        <input type="text" name="quantidade_popup" value="1" id="quantidade_popup" class="form-control num">
+                                        <label>Quantidade</label>
+                                        <input type="text" name="quantidade_popup" id="quantidade_popup" class="form-control num">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button id="salvarProduto" class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-plus-sign"></span>&nbsp;&nbsp;Adicionar</button>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+                        <button id="salvarProduto" class="btn btn-success" type="submit"><span class="glyphicon glyphicon-plus-sign"></span>&nbsp;&nbsp;Adicionar</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-
+<script src="assets/js/cadastro.js"></script>
 <script>
 
     $('.num').keypress(function (event) {
@@ -137,29 +138,45 @@ $lista = $produto->lista();
         $("#id_popup").val($("#id" + valor).val());
         $("#nome_popup").val($("#nome" + valor).val());
 
+        $('#detalhesCompra').on('shown.bs.modal', function () {
+            $('#quantidade_popup').select().val(1);
+        });
+
         return false;
     }
 
     $('#salvarProduto').click(function(e){
         e.preventDefault();
 
-        var serializeDados = $('#formProduto').serialize();
+        setTimeout(function () {
 
-        $.ajax({
-            url: '_inc/controller/carrinho.control.php',
-            type: 'POST',
-            data: serializeDados,
-            success: function(data) {
-                window.location.reload();
-            },
-            complete: function() {
-                $('#detalhesCompra').modal('toggle');
-            },
-            error: function(xhr,er) {
-                alert('Erro: ' + xhr.status + ' - ' + xhr.statusText + '<br />Tipo de erro: ' + er);
-            }
-        });
+            var form = $('#formProduto');
 
+            $.ajax({
+                url: '_inc/controller/carrinho.control.php',
+                type: 'POST',
+                cache: false,
+                data: form.serialize(),
+                success: function(data) {
+                    if (data == "ok") {
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1000);
+                        setTimeout(function () {
+                            mostraAlertaOK("Produto adicionado com sucesso!");
+                        }, 200);
+                    }
+                },
+                complete: function() {
+                    setTimeout(function () {
+                        $('#detalhesCompra').modal('toggle');
+                    }, 200);
+                },
+                error: function(xhr,er) {
+                    alert('Erro: ' + xhr.status + ' - ' + xhr.statusText + '<br />Tipo de erro: ' + er);
+                }
+            });
+        }, 500);
     });
 
     $(document).ready(function() {
